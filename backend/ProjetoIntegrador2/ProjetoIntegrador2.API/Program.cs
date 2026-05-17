@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using ProjetoIntegrador2.API.Data;
+using ProjetoIntegrador2.API.Data.Seeds;
 using ProjetoIntegrador2.API.Mappings;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -22,6 +23,7 @@ using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     db.Database.EnsureCreated();
+    MovimentoSeeder.Seed(db);
 }
 
 // Configure the HTTP request pipeline.

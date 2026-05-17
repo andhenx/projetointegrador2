@@ -11,6 +11,7 @@ public class AppDbContext : DbContext
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
     public DbSet<Produto> Produtos { get; set; }
+    public DbSet<Movimento> Movimentos { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -54,6 +55,56 @@ public class AppDbContext : DbContext
                   .HasColumnType("numeric(18,4)");
         });
 
+        modelBuilder.Entity<Movimento>(entity =>
+        {
+            entity.ToTable("movimentos");
+
+            entity.HasKey(m => m.Id);
+
+            entity.Property(m => m.Id)
+                  .HasColumnName("id")
+                  .HasDefaultValueSql("gen_random_uuid()");
+
+            entity.Property(m => m.Tipo)
+                  .HasColumnName("tipo")
+                  .IsRequired();
+
+            entity.Property(m => m.Data)
+                  .HasColumnName("data")
+                  .IsRequired();
+
+            entity.Property(m => m.NumNt)
+                  .HasColumnName("num_nt")
+                  .IsRequired();
+
+            entity.Property(m => m.Serie)
+                  .HasColumnName("serie")
+                  .IsRequired();
+
+            entity.Property(m => m.Chave)
+                  .HasColumnName("chave")
+                  .IsRequired();
+
+            entity.Property(m => m.Codigo)
+                  .HasColumnName("codigo")
+                  .IsRequired();
+
+            entity.Property(m => m.Descricao)
+                  .HasColumnName("descricao")
+                  .IsRequired();
+
+            entity.Property(m => m.Qtde)
+                  .HasColumnName("qtde")
+                  .HasColumnType("numeric(18,4)");
+
+            entity.Property(m => m.PrecoUnit)
+                  .HasColumnName("preco_unit")
+                  .HasColumnType("numeric(18,4)");
+
+            entity.Property(m => m.Total)
+                  .HasColumnName("total")
+                  .HasColumnType("numeric(18,4)");
+        });
 
         //Seed do CSV de Produtos
         var config = new CsvConfiguration(CultureInfo.InvariantCulture)
