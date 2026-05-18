@@ -5,6 +5,9 @@ node_modules/
 dist/
 build/
 
+# Exceção: stubs de vendor libs que precisam estar no container
+!assets/libs/simplebar/dist/
+
 # Variáveis de ambiente
 .env
 .env.local
