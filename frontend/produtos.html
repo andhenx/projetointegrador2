@@ -1,0 +1,714 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Estoque — SmartFerragem</title>
+  <link rel="shortcut icon" type="image/png" href="./assets/images/logos/favicon.png">
+  <link rel="stylesheet" href="./assets/css/styles.min.css">
+  <link rel="stylesheet" href="./assets/css/smartferragem.css">
+  <style>
+    /* ── Modal ──────────────────────────────────────────────── */
+    .sf-modal-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
+      z-index: 8000; align-items: center; justify-content: center;
+    }
+    .sf-modal-overlay.open { display: flex; }
+    .sf-modal {
+      background: #1E2128; border: 1px solid var(--border-strong);
+      border-radius: 14px; width: 100%; max-width: 480px;
+      box-shadow: 0 24px 64px rgba(0,0,0,0.5);
+      animation: cmdIn 180ms ease;
+    }
+    .sf-modal-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 20px 24px 0;
+    }
+    .sf-modal-title { font-size: 15px; font-weight: 700; color: var(--t1); margin: 0; }
+    .sf-modal-close {
+      background: none; border: none; color: var(--t3); cursor: pointer;
+      font-size: 20px; padding: 4px; border-radius: 6px;
+      transition: background var(--t), color var(--t);
+    }
+    .sf-modal-close:hover { background: rgba(255,255,255,0.07); color: var(--t1); }
+    .sf-modal-body { padding: 20px 24px; }
+    .sf-modal-footer {
+      display: flex; gap: 10px; justify-content: flex-end;
+      padding: 0 24px 20px;
+    }
+    /* Form fields */
+    .sf-field { margin-bottom: 16px; }
+    .sf-label {
+      display: block; font-size: 12px; font-weight: 600;
+      color: var(--t3); margin-bottom: 6px; letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .sf-input {
+      width: 100%; background: var(--bg-2); border: 1px solid var(--border);
+      border-radius: 8px; padding: 9px 12px; color: var(--t1);
+      font-size: 13.5px; font-family: inherit; outline: none;
+      transition: border-color var(--t), box-shadow var(--t);
+    }
+    .sf-input:focus {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 3px var(--blue-bg);
+    }
+    .sf-input::placeholder { color: var(--t3); }
+    .sf-input-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    /* Buttons */
+    .sf-btn {
+      font-size: 13px; font-weight: 600; font-family: inherit;
+      padding: 9px 18px; border-radius: 8px; border: none;
+      cursor: pointer; transition: all var(--t);
+    }
+    .sf-btn-ghost {
+      background: transparent; border: 1px solid var(--border);
+      color: var(--t2);
+    }
+    .sf-btn-ghost:hover { background: rgba(255,255,255,0.06); color: var(--t1); }
+    .sf-btn-primary {
+      background: var(--blue); color: #fff;
+    }
+    .sf-btn-primary:hover { filter: brightness(1.1); }
+    .sf-btn-primary:disabled { opacity: 0.5; cursor: not-allowed; filter: none; }
+    .sf-btn-danger {
+      background: var(--red); color: #fff;
+    }
+    .sf-btn-danger:hover { filter: brightness(1.1); }
+    .sf-btn-danger:disabled { opacity: 0.5; cursor: not-allowed; filter: none; }
+    /* Toast */
+    .sf-toast {
+      position: fixed; bottom: 24px; right: 24px; z-index: 9999;
+      background: #1E2128; border: 1px solid var(--border-strong);
+      border-radius: 10px; padding: 12px 18px;
+      display: flex; align-items: center; gap: 10px;
+      font-size: 13px; color: var(--t1);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+      animation: toastIn 200ms ease;
+      min-width: 240px;
+    }
+    @keyframes toastIn {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .sf-toast.success i { color: var(--green); }
+    .sf-toast.error   i { color: var(--red); }
+    /* New btn in toolbar */
+    .sf-btn-new {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 12.5px; font-weight: 600; font-family: inherit;
+      padding: 7px 14px; border-radius: 8px;
+      background: var(--blue); color: #fff; border: none;
+      cursor: pointer; transition: filter var(--t);
+    }
+    .sf-btn-new:hover { filter: brightness(1.1); }
+    /* Row action buttons */
+    .sf-action-btn {
+      background: none; border: 1px solid var(--border);
+      border-radius: 6px; padding: 4px 7px;
+      color: var(--t3); cursor: pointer;
+      transition: all var(--t); margin: 0 2px;
+      font-size: 13px; line-height: 1;
+    }
+    .sf-action-btn:hover { background: rgba(255,255,255,0.06); color: var(--t1); }
+    .sf-action-btn.danger:hover {
+      background: rgba(248,113,113,0.12); border-color: var(--red); color: var(--red);
+    }
+    /* Delete confirm modal warning text */
+    .sf-del-warning {
+      color: var(--t2); font-size: 14px; line-height: 1.6; margin: 0;
+    }
+  </style>
+</head>
+<body>
+
+<div class="sf-sidebar-backdrop" id="sf-backdrop"></div>
+
+<!-- ── Sidebar ─────────────────────────────────────────────── -->
+<aside class="left-sidebar" id="sf-sidebar">
+  <button class="sf-sidebar-close" id="sf-close"><i class="ti ti-x"></i></button>
+
+  <div class="sf-brand">
+    <div class="sf-brand-logo">
+      <div class="sf-brand-icon"><i class="ti ti-bolt"></i></div>
+      <div>
+        <div class="sf-brand-name">SmartFerragem</div>
+        <div class="sf-brand-sub">Controle de Estoque</div>
+      </div>
+    </div>
+  </div>
+
+  <nav>
+    <ul style="list-style:none;margin:0;padding:0;">
+      <li class="sf-nav-item">
+        <a class="sf-nav-link" href="./index.html">
+          <i class="ti ti-layout-dashboard"></i> Dashboard
+        </a>
+      </li>
+      <li class="sf-nav-item">
+        <a class="sf-nav-link active" href="./produtos.html">
+          <i class="ti ti-package"></i> Estoque
+        </a>
+      </li>
+      <li class="sf-nav-item">
+        <a class="sf-nav-link" href="./movimentacoes.html">
+          <i class="ti ti-arrows-exchange"></i> Movimentações
+        </a>
+      </li>
+    </ul>
+  </nav>
+</aside>
+
+<!-- ── Header ──────────────────────────────────────────────── -->
+<header class="sf-header">
+  <button class="sf-header-mobile-toggle" id="sf-menu-toggle">
+    <i class="ti ti-menu-2"></i>
+  </button>
+
+  <span class="sf-header-title">Estoque</span>
+  <div class="sf-header-spacer"></div>
+
+  <button class="sf-cmd-trigger" id="sf-cmd-open">
+    <i class="ti ti-search" style="font-size:14px"></i>
+    <span>Busca rápida...</span>
+    <kbd>Ctrl K</kbd>
+  </button>
+</header>
+
+<!-- ── Main ────────────────────────────────────────────────── -->
+<main class="sf-main">
+  <div class="sf-content">
+
+    <div class="sf-page-header">
+      <div>
+        <h1 class="sf-page-title">Estoque</h1>
+        <p class="sf-page-sub">Cadastro e controle de produtos</p>
+      </div>
+      <div style="display:flex;gap:10px">
+        <button class="sf-refresh-btn" id="sf-refresh">
+          <i class="ti ti-refresh"></i> Atualizar
+        </button>
+        <button class="sf-btn-new" id="sf-btn-new">
+          <i class="ti ti-plus"></i> Novo Produto
+        </button>
+      </div>
+    </div>
+
+    <!-- Error -->
+    <div class="sf-error" id="sf-error" style="display:none">
+      <i class="ti ti-alert-circle"></i>
+      <span id="sf-error-msg"></span>
+    </div>
+
+    <div class="sf-card">
+      <!-- Toolbar -->
+      <div class="sf-toolbar">
+        <div class="sf-search">
+          <i class="ti ti-search"></i>
+          <input type="text" id="sf-search" placeholder="Buscar por código ou descrição...">
+        </div>
+        <div class="sf-filter-group">
+          <button class="sf-filter-btn active" data-f="todos">Todos</button>
+          <button class="sf-filter-btn" data-f="baixo" id="btn-baixo">
+            <i class="ti ti-alert-triangle"></i> Baixo
+          </button>
+          <button class="sf-filter-btn" data-f="zero" id="btn-zero">
+            <i class="ti ti-circle-x"></i> Sem Estoque
+          </button>
+        </div>
+      </div>
+
+      <!-- Skeleton loading -->
+      <div id="sf-skeleton">
+        <div class="sf-skeleton-row"><div class="sf-skeleton" style="width:100%;height:13px"></div></div>
+        <div class="sf-skeleton-row"><div class="sf-skeleton" style="width:88%;height:13px"></div></div>
+        <div class="sf-skeleton-row"><div class="sf-skeleton" style="width:94%;height:13px"></div></div>
+        <div class="sf-skeleton-row"><div class="sf-skeleton" style="width:82%;height:13px"></div></div>
+        <div class="sf-skeleton-row"><div class="sf-skeleton" style="width:97%;height:13px"></div></div>
+        <div class="sf-skeleton-row"><div class="sf-skeleton" style="width:75%;height:13px"></div></div>
+      </div>
+
+      <!-- Table -->
+      <div class="sf-table-wrap" id="sf-table-wrap" style="display:none">
+        <table class="sf-table">
+          <thead>
+            <tr>
+              <th>Código</th>
+              <th>Descrição</th>
+              <th>Unid.</th>
+              <th class="col-num">Custo</th>
+              <th class="col-num">Preço</th>
+              <th class="col-num" style="padding-right:20px">Estoque</th>
+              <th class="col-center" style="padding-left:20px">Situação</th>
+              <th class="col-center">Status</th>
+              <th class="col-center">Ações</th>
+            </tr>
+          </thead>
+          <tbody id="sf-tbody"></tbody>
+        </table>
+      </div>
+
+      <!-- Count -->
+      <div class="sf-count" id="sf-count" style="display:none"></div>
+    </div>
+
+  </div>
+</main>
+
+<!-- ── Modal Produto (Novo / Editar) ──────────────────────── -->
+<div class="sf-modal-overlay" id="sf-modal">
+  <div class="sf-modal">
+    <div class="sf-modal-header">
+      <h3 class="sf-modal-title" id="sf-modal-title">Novo Produto</h3>
+      <button class="sf-modal-close" id="sf-modal-close"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="sf-modal-body">
+      <div class="sf-field">
+        <label class="sf-label">Nome / Descrição *</label>
+        <input class="sf-input" type="text" id="f-descricao" placeholder="Ex: Fio elétrico 2.5mm">
+      </div>
+      <div class="sf-input-row">
+        <div class="sf-field">
+          <label class="sf-label">Código</label>
+          <input class="sf-input" type="text" id="f-codigo" placeholder="Ex: FRG-011">
+        </div>
+        <div class="sf-field">
+          <label class="sf-label">Unidade</label>
+          <input class="sf-input" type="text" id="f-unid" placeholder="UN, KG, MT, CX…">
+        </div>
+      </div>
+      <div class="sf-input-row">
+        <div class="sf-field">
+          <label class="sf-label">Preço de Venda (R$) *</label>
+          <input class="sf-input" type="number" id="f-preco" placeholder="0,00" min="0" step="0.01">
+        </div>
+        <div class="sf-field">
+          <label class="sf-label">Custo (R$)</label>
+          <input class="sf-input" type="number" id="f-custo" placeholder="0,00" min="0" step="0.01">
+        </div>
+      </div>
+      <div class="sf-field" style="margin-bottom:0">
+        <label class="sf-label">Quantidade em Estoque *</label>
+        <input class="sf-input" type="number" id="f-estoque" placeholder="0" min="0" step="1">
+      </div>
+    </div>
+    <div class="sf-modal-footer">
+      <button class="sf-btn sf-btn-ghost" id="sf-modal-cancel">Cancelar</button>
+      <button class="sf-btn sf-btn-primary" id="sf-modal-save">
+        <i class="ti ti-check" style="font-size:14px;margin-right:4px"></i>Salvar Produto
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Modal Confirmar Exclusão ────────────────────────────── -->
+<div class="sf-modal-overlay" id="sf-del-modal">
+  <div class="sf-modal" style="max-width:400px">
+    <div class="sf-modal-header">
+      <h3 class="sf-modal-title">Confirmar Exclusão</h3>
+      <button class="sf-modal-close" id="sf-del-close"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="sf-modal-body">
+      <p class="sf-del-warning">
+        Tem certeza que deseja excluir
+        <strong id="sf-del-nome" style="color:var(--t1)"></strong>?
+        <br>Esta ação não pode ser desfeita.
+      </p>
+    </div>
+    <div class="sf-modal-footer">
+      <button class="sf-btn sf-btn-ghost" id="sf-del-cancel">Cancelar</button>
+      <button class="sf-btn sf-btn-danger" id="sf-del-confirm">
+        <i class="ti ti-trash" style="font-size:14px;margin-right:4px"></i>Excluir
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Command Palette ─────────────────────────────────────── -->
+<div class="sf-cmd-overlay" id="sf-cmd">
+  <div class="sf-cmd-box">
+    <div class="sf-cmd-search">
+      <i class="ti ti-search"></i>
+      <input type="text" id="sf-cmd-input" placeholder="Buscar produtos, páginas..." autocomplete="off" spellcheck="false">
+      <span class="sf-cmd-esc">ESC</span>
+    </div>
+    <div class="sf-cmd-results" id="sf-cmd-results"></div>
+  </div>
+</div>
+
+<script src="./assets/libs/jquery/dist/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/iconify-icon@1.0.8/dist/iconify-icon.min.js"></script>
+<script>
+const API    = 'http://localhost:8080/api/produto';
+const LIMIAR = 5;
+let allProdutos = [];
+let filtroAtivo = 'todos';
+let editingId   = null; // null = novo produto, string = editar
+let deletingId  = null;
+
+// funções para formatar valores na tela
+const fmtBRL = v => 'R$ ' + Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const fmtQtd = v => {
+  const n = Number(v);
+  return n % 1 === 0
+    ? n.toLocaleString('pt-BR')
+    : n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+};
+
+function sit(p) {
+  const q = Number(p.estoque);
+  if (q === 0) return 'zero';
+  if (q <= LIMIAR) return 'baixo';
+  return 'ok';
+}
+
+// busca os dados da API quando a página carrega
+async function carregar() {
+  document.getElementById('sf-skeleton').style.display = 'block';
+  document.getElementById('sf-table-wrap').style.display = 'none';
+  document.getElementById('sf-count').style.display = 'none';
+  document.getElementById('sf-error').style.display = 'none';
+
+  try {
+    const res = await fetch(API);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    allProdutos = await res.json();
+    document.getElementById('sf-skeleton').style.display = 'none';
+    document.getElementById('sf-table-wrap').style.display = 'block';
+    document.getElementById('sf-count').style.display = 'block';
+    aplicar();
+  } catch(e) {
+    document.getElementById('sf-skeleton').style.display = 'none';
+    document.getElementById('sf-error-msg').textContent = 'Não foi possível conectar à API: ' + e.message;
+    document.getElementById('sf-error').style.display = 'flex';
+  }
+}
+
+function aplicar() {
+  const q = document.getElementById('sf-search').value.toLowerCase().trim();
+
+  let lista = allProdutos.filter(p => {
+    if (filtroAtivo === 'zero')  return Number(p.estoque) === 0;
+    if (filtroAtivo === 'baixo') return Number(p.estoque) > 0 && Number(p.estoque) <= LIMIAR;
+    return true;
+  });
+
+  if (q) lista = lista.filter(p =>
+    p.descricao.toLowerCase().includes(q) || p.codigo.toLowerCase().includes(q)
+  );
+
+  renderTabela(lista);
+}
+
+function renderTabela(lista) {
+  const tbody = document.getElementById('sf-tbody');
+  const count = document.getElementById('sf-count');
+
+  if (!lista.length) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="9" style="text-align:center;padding:48px;color:var(--t3);font-size:13px">
+          Nenhum produto encontrado.
+        </td>
+      </tr>`;
+    count.textContent = '';
+    return;
+  }
+
+  tbody.innerHTML = lista.map(p => {
+    const s = sit(p);
+    const qClass = s === 'zero' ? 'qty-zero' : s === 'baixo' ? 'qty-low' : 'qty-ok';
+
+    const situTag = s === 'zero'
+      ? '<span class="sf-tag red">Sem Estoque</span>'
+      : s === 'baixo'
+        ? '<span class="sf-tag amber">Baixo</span>'
+        : '<span class="sf-tag green">OK</span>';
+
+    const statusTag = p.ativo
+      ? '<span class="sf-tag blue">Ativo</span>'
+      : '<span class="sf-tag muted">Inativo</span>';
+
+    const escapedNome = p.descricao.replace(/"/g, '&quot;');
+
+    return `
+      <tr>
+        <td class="col-code">${p.codigo}</td>
+        <td class="col-desc">${p.descricao}</td>
+        <td style="color:var(--t3)">${p.unid}</td>
+        <td class="col-num" style="color:var(--t2)">${fmtBRL(p.custo)}</td>
+        <td class="col-num" style="color:var(--t2)">${fmtBRL(p.preco)}</td>
+        <td class="col-num ${qClass}" style="padding-right:20px">${fmtQtd(p.estoque)}</td>
+        <td class="col-center" style="padding-left:20px">${situTag}</td>
+        <td class="col-center">${statusTag}</td>
+        <td class="col-center" style="white-space:nowrap">
+          <button class="sf-action-btn" data-action="edit" data-id="${p.id}" title="Editar">
+            <i class="ti ti-pencil"></i>
+          </button>
+          <button class="sf-action-btn danger" data-action="delete" data-id="${p.id}" data-nome="${escapedNome}" title="Excluir">
+            <i class="ti ti-trash"></i>
+          </button>
+        </td>
+      </tr>`;
+  }).join('');
+
+  count.textContent = lista.length + ' produto(s) encontrado(s)';
+}
+
+// detecta clique nos botões de editar e excluir da tabela
+document.getElementById('sf-tbody').addEventListener('click', e => {
+  const btn = e.target.closest('[data-action]');
+  if (!btn) return;
+  const id = btn.dataset.id;
+  if (btn.dataset.action === 'edit') {
+    const produto = allProdutos.find(p => p.id === id);
+    if (produto) openModal(produto);
+  } else if (btn.dataset.action === 'delete') {
+    openDelModal(id, btn.dataset.nome);
+  }
+});
+
+// eventos dos botões de filtro e busca
+document.getElementById('sf-refresh').addEventListener('click', carregar);
+document.getElementById('sf-search').addEventListener('input', aplicar);
+
+document.querySelectorAll('[data-f]').forEach(btn => {
+  btn.addEventListener('click', function() {
+    filtroAtivo = this.dataset.f;
+    document.querySelectorAll('[data-f]').forEach(b => {
+      b.classList.remove('active','amber-active','red-active');
+    });
+    if (filtroAtivo === 'todos')  this.classList.add('active');
+    if (filtroAtivo === 'baixo')  this.classList.add('amber-active');
+    if (filtroAtivo === 'zero')   this.classList.add('red-active');
+    aplicar();
+  });
+});
+
+carregar();
+
+// mostra uma mensagem temporária no canto da tela
+function toast(msg, type = 'success') {
+  const el = document.createElement('div');
+  el.className = `sf-toast ${type}`;
+  el.innerHTML = `<i class="ti ti-${type === 'success' ? 'circle-check' : 'alert-circle'}"></i><span>${msg}</span>`;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 3500);
+}
+
+// controla o modal de cadastro/edição de produto
+const modal = document.getElementById('sf-modal');
+
+function openModal(produto = null) {
+  editingId = produto ? produto.id : null;
+  document.getElementById('sf-modal-title').textContent = produto ? 'Editar Produto' : 'Novo Produto';
+
+  if (produto) {
+    document.getElementById('f-descricao').value = produto.descricao;
+    document.getElementById('f-codigo').value    = produto.codigo;
+    document.getElementById('f-unid').value      = produto.unid;
+    document.getElementById('f-preco').value     = produto.preco;
+    document.getElementById('f-custo').value     = produto.custo;
+    document.getElementById('f-estoque').value   = produto.estoque;
+  } else {
+    ['f-descricao','f-codigo','f-unid','f-preco','f-custo','f-estoque']
+      .forEach(id => { document.getElementById(id).value = ''; });
+  }
+
+  modal.classList.add('open');
+  document.getElementById('f-descricao').focus();
+}
+
+function closeModal() { modal.classList.remove('open'); }
+
+document.getElementById('sf-btn-new').addEventListener('click', () => openModal());
+document.getElementById('sf-modal-close').addEventListener('click', closeModal);
+document.getElementById('sf-modal-cancel').addEventListener('click', closeModal);
+modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && modal.classList.contains('open')) closeModal();
+});
+
+document.getElementById('sf-modal-save').addEventListener('click', async () => {
+  const descricao = document.getElementById('f-descricao').value.trim();
+  const preco     = parseFloat(document.getElementById('f-preco').value);
+  const estoque   = parseFloat(document.getElementById('f-estoque').value);
+
+  if (!descricao) { toast('Informe o nome do produto.', 'error'); return; }
+  if (isNaN(preco) || preco < 0) { toast('Informe um preço válido.', 'error'); return; }
+  if (isNaN(estoque) || estoque < 0) { toast('Informe a quantidade.', 'error'); return; }
+
+  const btn = document.getElementById('sf-modal-save');
+  btn.disabled = true;
+  btn.textContent = 'Salvando…';
+
+  const payload = {
+    descricao: descricao.toUpperCase(),
+    codigo:    document.getElementById('f-codigo').value.trim() || 'FRG-' + Date.now().toString().slice(-6),
+    unid:      document.getElementById('f-unid').value.trim().toUpperCase() || 'UN',
+    preco:     preco,
+    custo:     parseFloat(document.getElementById('f-custo').value) || 0,
+    estoque:   estoque,
+    ativo:     true
+  };
+
+  try {
+    let res;
+    if (editingId) {
+      res = await fetch(`${API}/${editingId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+    } else {
+      res = await fetch(API, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+    }
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+
+    closeModal();
+    toast(`"${payload.descricao}" ${editingId ? 'atualizado' : 'cadastrado'} com sucesso!`);
+    await carregar();
+  } catch (e) {
+    toast('Erro ao salvar: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="ti ti-check" style="font-size:14px;margin-right:4px"></i>Salvar Produto';
+  }
+});
+
+// controla o modal de confirmação de exclusão
+const delModal = document.getElementById('sf-del-modal');
+
+function openDelModal(id, nome) {
+  deletingId = id;
+  document.getElementById('sf-del-nome').textContent = nome;
+  delModal.classList.add('open');
+}
+function closeDelModal() { delModal.classList.remove('open'); deletingId = null; }
+
+document.getElementById('sf-del-close').addEventListener('click', closeDelModal);
+document.getElementById('sf-del-cancel').addEventListener('click', closeDelModal);
+delModal.addEventListener('click', e => { if (e.target === delModal) closeDelModal(); });
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && delModal.classList.contains('open')) closeDelModal();
+});
+
+document.getElementById('sf-del-confirm').addEventListener('click', async () => {
+  if (!deletingId) return;
+  const btn = document.getElementById('sf-del-confirm');
+  btn.disabled = true;
+  btn.textContent = 'Excluindo…';
+
+  try {
+    const res = await fetch(`${API}/${deletingId}`, { method: 'DELETE' });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+
+    closeDelModal();
+    toast('Produto excluído com sucesso!');
+    await carregar();
+  } catch (e) {
+    toast('Erro ao excluir: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="ti ti-trash" style="font-size:14px;margin-right:4px"></i>Excluir';
+  }
+});
+
+// abre e fecha o menu lateral no celular
+const sidebar  = document.getElementById('sf-sidebar');
+const backdrop = document.getElementById('sf-backdrop');
+
+function openSidebar()  { sidebar.classList.add('open');    backdrop.classList.add('open'); }
+function closeSidebar() { sidebar.classList.remove('open'); backdrop.classList.remove('open'); }
+
+document.getElementById('sf-menu-toggle').addEventListener('click', openSidebar);
+document.getElementById('sf-close').addEventListener('click', closeSidebar);
+backdrop.addEventListener('click', closeSidebar);
+
+// paleta de busca rápida (abre com Ctrl+K)
+const pages = [
+  { name: 'Dashboard',     href: './index.html',        icon: 'ti-layout-dashboard' },
+  { name: 'Estoque',       href: './produtos.html',      icon: 'ti-package' },
+  { name: 'Movimentações', href: './movimentacoes.html', icon: 'ti-arrows-exchange' },
+];
+
+const cmdOverlay = document.getElementById('sf-cmd');
+const cmdInput   = document.getElementById('sf-cmd-input');
+const cmdResults = document.getElementById('sf-cmd-results');
+let cmdFocusIdx  = -1;
+
+function openCmd() {
+  cmdOverlay.classList.add('open');
+  cmdInput.value = '';
+  cmdFocusIdx = -1;
+  renderCmd('');
+  setTimeout(() => cmdInput.focus(), 30);
+}
+function closeCmd() { cmdOverlay.classList.remove('open'); }
+
+function renderCmd(q) {
+  const s = q.toLowerCase().trim();
+  let html = '';
+
+  const pm = s ? pages.filter(p => p.name.toLowerCase().includes(s)) : pages;
+  if (pm.length) {
+    html += '<div class="sf-cmd-group">Páginas</div>';
+    html += pm.map(p =>
+      `<a href="${p.href}" class="sf-cmd-item"><i class="ti ${p.icon}"></i><span>${p.name}</span></a>`
+    ).join('');
+  }
+
+  const prods = s
+    ? allProdutos.filter(p => p.descricao.toLowerCase().includes(s) || p.codigo.toLowerCase().includes(s)).slice(0, 10)
+    : allProdutos.slice(0, 6);
+
+  if (prods.length) {
+    html += '<div class="sf-cmd-group">Produtos</div>';
+    html += prods.map(p =>
+      `<a href="./produtos.html" class="sf-cmd-item">
+         <i class="ti ti-package"></i>
+         <span>${p.descricao}</span>
+         <span class="meta">${p.codigo}</span>
+       </a>`
+    ).join('');
+  }
+
+  if (!html) html = '<div class="sf-cmd-empty">Nenhum resultado encontrado.</div>';
+  cmdResults.innerHTML = html;
+  cmdFocusIdx = -1;
+}
+
+function cmdNavigate(dir) {
+  const items = cmdResults.querySelectorAll('.sf-cmd-item');
+  if (!items.length) return;
+  items[cmdFocusIdx]?.classList.remove('focused');
+  cmdFocusIdx = (cmdFocusIdx + dir + items.length) % items.length;
+  items[cmdFocusIdx].classList.add('focused');
+  items[cmdFocusIdx].scrollIntoView({ block: 'nearest' });
+}
+
+cmdInput.addEventListener('input', () => renderCmd(cmdInput.value));
+document.getElementById('sf-cmd-open').addEventListener('click', openCmd);
+cmdOverlay.addEventListener('click', e => { if (e.target === cmdOverlay) closeCmd(); });
+
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'k') { e.preventDefault(); openCmd(); return; }
+  if (!cmdOverlay.classList.contains('open')) return;
+  if (e.key === 'Escape')    { closeCmd(); return; }
+  if (e.key === 'ArrowDown') { e.preventDefault(); cmdNavigate(1);  return; }
+  if (e.key === 'ArrowUp')   { e.preventDefault(); cmdNavigate(-1); return; }
+  if (e.key === 'Enter') {
+    const focused = cmdResults.querySelector('.sf-cmd-item.focused');
+    if (focused) focused.click();
+  }
+});
+</script>
+</body>
+</html>

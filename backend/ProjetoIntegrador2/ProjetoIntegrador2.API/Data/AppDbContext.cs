@@ -106,19 +106,17 @@ public class AppDbContext : DbContext
                   .HasColumnType("numeric(18,4)");
         });
 
-        //Seed do CSV de Produtos
-        var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+        // Popula a tabela de produtos com os dados do CSV
+        var config = new CsvConfiguration(CultureInfo.GetCultureInfo("pt-BR"))
         {
             HasHeaderRecord = true,
             Delimiter = ","
         };
 
+        // Tenta o caminho padrão, se não achar tenta o diretório atual
         string path = Path.Combine(AppContext.BaseDirectory, "Data", "Seeds", "produtos_com_uuid.csv");
         if (!File.Exists(path))
-        {
-            // Fallback para ambiente de Design/Migrations caso o BaseDirectory varie
             path = Path.Combine(Directory.GetCurrentDirectory(), "Data", "Seeds", "produtos_com_uuid.csv");
-        }
 
         using (var reader = new StreamReader(path))
         using (var csv = new CsvReader(reader, config))

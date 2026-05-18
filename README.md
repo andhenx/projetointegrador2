@@ -1,172 +1,153 @@
-# # Projeto Integrador II
+# SmartFerragem — Projeto Integrador II
 
-Repositório do projeto integrador 2 - Semestre 01/2026
-Membros do Grupo: Anderson de Oliveira, Andrew Henrique de Lara Girarde e André Luiz dos Santos
+Sistema de controle de estoque para uma ferragem de bairro. Desenvolvido para a disciplina de Projeto Integrador II — semestre 2026/1.
 
-## Como executar com Docker
+**Grupo:** Anderson de Oliveira, Andrew Henrique de Lara Girarde e André Luiz dos Santos
 
-Certifique-se de ter o [Docker](https://www.docker.com/) instalado e em execução.
+---
 
-Na raiz do repositório, execute:
+## O que o sistema faz
+
+- Cadastro de produtos (adicionar, editar e remover)
+- Alertas automáticos de estoque baixo (≤ 5 unidades) e sem estoque
+- Registro de movimentações de entrada e saída
+- Dashboard com visão geral do estoque e valor total em estoque
+
+---
+
+## Como rodar
+
+Você precisa ter o [Docker Desktop](https://www.docker.com/) instalado e aberto.
+
+Na pasta raiz do projeto, rode:
 
 ```bash
 docker-compose up -d --build
 ```
 
-Os serviços estarão disponíveis em:
+Depois é só abrir no navegador:
 
-| Serviço    | URL                   |
-| ---------- | --------------------- |
-| Frontend   | http://localhost      |
-| Backend    | http://localhost:8080 |
-| PostgreSQL | `localhost:5432`      |
+| O quê       | Endereço               |
+|-------------|------------------------|
+| Sistema     | http://localhost       |
+| API         | http://localhost:8080  |
+| Banco       | localhost:5433         |
 
-Para parar os containers:
+Para parar tudo:
 
 ```bash
 docker-compose down
 ```
 
-> As credenciais padrão do banco de dados são `postgres/postgres` e o banco criado é `projetointegrador`. Você pode sobrescrevê-las criando um arquivo `.env` na raiz com as variáveis `POSTGRES_USER`, `POSTGRES_PASSWORD` e `POSTGRES_DB`.
-
-# API
-
-API REST desenvolvida em **ASP.NET Core 8** com **Entity Framework Core** (PostgreSQL) e **AutoMapper**.
+> Se quiser resetar o banco e recarregar os dados iniciais, use `docker-compose down -v` (apaga o volume do PostgreSQL).
 
 ---
 
-## 🚀 Pré-requisitos
+## Tecnologias usadas
 
-- [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)
-- PostgreSQL rodando localmente na porta `5432`
-  - Usuário: `postgres`
-  - Senha: `postgres`
+**Backend**
+- ASP.NET Core 8 (C#)
+- Entity Framework Core + PostgreSQL (Npgsql)
+- AutoMapper
+- CsvHelper (para importar os dados iniciais do CSV)
 
-O banco de dados `projetointegrador` e a tabela `produtos` são criados automaticamente na primeira execução.
+**Frontend**
+- HTML, CSS e JavaScript puro
+- Sem frameworks — só jQuery e ícones do Tabler Icons
+
+**Infraestrutura**
+- Docker + Docker Compose (3 containers: frontend, backend, banco)
 
 ---
 
-## ▶️ Como executar
+## Estrutura do projeto
 
-```bash
-cd backend/ProjetoIntegrador2/ProjetoIntegrador2.API
-dotnet run
+```
+projeto-integrador-2/
+├── frontend/               # Páginas HTML servidas pelo Nginx
+│   ├── index.html          # Dashboard
+│   ├── produtos.html       # Estoque (cadastro de produtos)
+│   └── movimentacoes.html  # Movimentações de entrada e saída
+│
+├── backend/
+│   └── ProjetoIntegrador2/
+│       └── ProjetoIntegrador2.API/
+│           ├── Controllers/
+│           │   ├── ProdutoController.cs    # Endpoints dos produtos
+│           │   ├── MovimentoController.cs  # Endpoints das movimentações
+│           │   └── HealthController.cs     # Verifica se a API está de pé
+│           ├── Entities/
+│           │   ├── Produto.cs              # Tabela de produtos
+│           │   └── Movimento.cs            # Tabela de movimentações
+│           ├── DTOs/                       # Objetos usados para entrada e saída da API
+│           ├── Mappings/                   # Configuração do AutoMapper
+│           ├── Data/
+│           │   ├── AppDbContext.cs         # Configuração do banco e mapeamento das tabelas
+│           │   └── Seeds/                  # CSVs com dados iniciais
+│           └── Program.cs                  # Ponto de entrada da API
+│
+└── docker-compose.yml      # Define os 3 containers do projeto
 ```
 
-A API ficará disponível em `https://localhost:7000` (ou a porta exibida no terminal).  
-O Swagger UI pode ser acessado em `https://localhost:<porta>/swagger`.
-
 ---
 
-## 📋 Endpoints
+## Endpoints da API
 
-### 🔵 Health
+### Produtos
 
-#### `GET /api/health`
+| Método | Rota                  | O que faz                    |
+|--------|-----------------------|------------------------------|
+| GET    | /api/produto          | Lista todos os produtos       |
+| POST   | /api/produto          | Cadastra um novo produto      |
+| PUT    | /api/produto/{id}     | Edita um produto existente    |
+| DELETE | /api/produto/{id}     | Remove um produto             |
 
-Verifica se a API está em funcionamento.
-
-**Requisição**
-
-```http
-GET /api/health
-```
-
-**Resposta** `200 OK`
-
+**Exemplo de corpo para POST/PUT:**
 ```json
 {
-  "status": "Healthy",
-  "timestamp": "2025-04-21T12:00:00.000Z"
+  "descricao": "PREGO 18X27",
+  "codigo": "FRG-001",
+  "unid": "CX",
+  "preco": 12.50,
+  "custo": 8.00,
+  "estoque": 10,
+  "ativo": true
 }
 ```
 
----
+### Movimentações
 
-### 🟢 Produtos
+| Método | Rota             | O que faz                          |
+|--------|------------------|------------------------------------|
+| GET    | /api/movimento   | Lista todas as movimentações        |
+| POST   | /api/movimento   | Registra uma entrada ou saída       |
 
-#### `GET /api/produto`
-
-Retorna a listagem completa de todos os produtos cadastrados.
-
-**Requisição**
-
-```http
-GET /api/produto
-```
-
-**Resposta** `200 OK`
-
+**Exemplo de corpo para POST:**
 ```json
-[
-  {
-    "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-    "codigo": "7893946366216",
-    "descricao": "ABAFADOR RUÍDO TIPO CONCHA 10DB ARV100 VONDER",
-    "ativo": true,
-    "unid": "UN",
-    "custo": 13.62,
-    "preco": 24.516,
-    "estoque": 2.0
-  },
-  {
-    "id": "9b2e4a77-1234-4def-a890-1b2c3d4e5f60",
-    "codigo": "7898554010018",
-    "descricao": "ABAFADOR RUÍDO TIPO CONCHA 10DB COMBAT DELTA PLUS",
-    "ativo": true,
-    "unid": "UN",
-    "custo": 8.79,
-    "preco": 15.822,
-    "estoque": 0.0
-  }
-]
+{
+  "produtoId": "uuid-do-produto",
+  "tipo": "Entrada",
+  "qtde": 5,
+  "precoUnit": 12.50
+}
 ```
 
-**Exemplo com `curl`**
+> O tipo pode ser `"Entrada"` ou `"Saida"`. Em saídas, a API verifica se tem estoque suficiente antes de registrar.
 
-```bash
-curl -X GET https://localhost:<porta>/api/produto \
-     -H "Accept: application/json"
-```
+### Health check
 
-**Exemplo com PowerShell**
-
-```powershell
-Invoke-RestMethod -Uri "https://localhost:<porta>/api/produto" -Method Get
-```
+| Método | Rota        | O que faz                    |
+|--------|-------------|------------------------------|
+| GET    | /api/health | Verifica se a API está rodando |
 
 ---
 
-## 🗂️ Estrutura do projeto
+## Variáveis de ambiente
 
+As configurações padrão já funcionam sem precisar mudar nada. Se quiser customizar, crie um arquivo `.env` na raiz:
+
+```env
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=postgres
+POSTGRES_DB=projetointegrador
 ```
-ProjetoIntegrador2.API/
-├── Controllers/
-│   ├── HealthController.cs
-│   └── ProdutoController.cs
-├── Data/
-│   ├── AppDbContext.cs
-│   └── Seeds/
-│       └── produtos.csv
-├── DTOs/
-│   ├── ProdutoDto.cs
-│   ├── CreateProdutoDto.cs
-│   └── UpdateProdutoDto.cs
-├── Entities/
-│   └── Produto.cs
-├── Mappings/
-│   └── ProdutoProfile.cs
-├── appsettings.json
-└── appsettings.Development.json
-```
-
----
-
-## 🛠️ Tecnologias utilizadas
-
-| Tecnologia                     | Versão |
-| ------------------------------ | ------ |
-| ASP.NET Core                   | 8.0    |
-| Entity Framework Core + Npgsql | 8.0    |
-| AutoMapper                     | 12.0   |
-| Swashbuckle (Swagger)          | 6.6    |

@@ -3,22 +3,32 @@ using ProjetoIntegrador2.API.Data;
 using ProjetoIntegrador2.API.Data.Seeds;
 using ProjetoIntegrador2.API.Mappings;
 
+// Necessário para o Npgsql aceitar DateTime sem precisar ser UTC
+AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// Configura a conexão com o banco PostgreSQL
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+// AutoMapper para converter entre entidades e DTOs
 builder.Services.AddAutoMapper(typeof(ProdutoProfile));
 
+// Permite que o frontend acesse a API (CORS liberado para desenvolvimento)
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", policy =>
+        policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod());
+});
+
 builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-// Cria o banco de dados e as tabelas automaticamente se não existirem
+// Cria as tabelas no banco se ainda não existirem e popula os dados iniciais
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
@@ -26,15 +36,15 @@ using (var scope = app.Services.CreateScope())
     MovimentoSeeder.Seed(db);
 }
 
-// Configure the HTTP request pipeline.
+// Swagger só fica disponível em ambiente de desenvolvimento
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
+app.UseCors("AllowAll");
 app.UseAuthorization();
-
 app.MapControllers();
 
 app.Run();
