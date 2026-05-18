@@ -202,7 +202,7 @@ const LIMIAR = 5;
 let allProdutos = [];
 
 // funções para formatar valores na tela
-const fmtBRL = v => 'R$ ' + Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 3, maximumFractionDigits: 3 });
+const fmtBRL = v => 'R$ ' + Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const fmtQtd = v => {
   const n = Number(v);
   return n % 1 === 0
