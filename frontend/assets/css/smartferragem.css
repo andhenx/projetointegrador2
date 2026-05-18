@@ -763,6 +763,173 @@ html, body {
 }
 .sf-error i { font-size: 17px; flex-shrink: 0; }
 
+/* ════════════════════════════════════════════════════════════
+   MODAL (compartilhado entre as páginas)
+════════════════════════════════════════════════════════════ */
+.sf-modal-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 8000;
+  align-items: center;
+  justify-content: center;
+}
+.sf-modal-overlay.open { display: flex; }
+
+.sf-modal {
+  background: #1E2128;
+  border: 1px solid var(--border-strong);
+  border-radius: 14px;
+  width: 100%;
+  max-width: 480px;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.5);
+  animation: cmdIn 180ms ease;
+  position: relative;
+  z-index: 8001;
+}
+.sf-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px 0;
+}
+.sf-modal-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--t1);
+  margin: 0;
+}
+.sf-modal-close {
+  background: none;
+  border: none;
+  color: var(--t3);
+  cursor: pointer;
+  font-size: 20px;
+  padding: 4px;
+  border-radius: 6px;
+  transition: background var(--t), color var(--t);
+}
+.sf-modal-close:hover {
+  background: rgba(255,255,255,0.07);
+  color: var(--t1);
+}
+.sf-modal-body  { padding: 20px 24px; }
+.sf-modal-footer {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  padding: 0 24px 20px;
+}
+
+/* Campos do formulário */
+.sf-field { margin-bottom: 16px; }
+.sf-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--t3);
+  margin-bottom: 6px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.sf-input, .sf-select {
+  width: 100%;
+  background: var(--bg-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 9px 12px;
+  color: var(--t1);
+  font-size: 13.5px;
+  font-family: inherit;
+  outline: none;
+  transition: border-color var(--t), box-shadow var(--t);
+}
+.sf-input:focus, .sf-select:focus {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px var(--blue-bg);
+}
+.sf-input::placeholder { color: var(--t3); }
+.sf-select option { background: #1E2128; }
+.sf-input-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+/* Botões do modal */
+.sf-btn {
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  font-family: inherit !important;
+  padding: 9px 18px !important;
+  border-radius: 8px !important;
+  cursor: pointer !important;
+  transition: all var(--t) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  text-decoration: none !important;
+  box-shadow: none !important;
+}
+.sf-btn-ghost {
+  background: transparent !important;
+  border: 1px solid var(--border) !important;
+  color: var(--t2) !important;
+}
+.sf-btn-ghost:hover { background: rgba(255,255,255,0.06) !important; color: var(--t1) !important; }
+.sf-btn-primary { background: var(--blue) !important; color: #fff !important; border: none !important; }
+.sf-btn-primary:hover { filter: brightness(1.1) !important; }
+.sf-btn-primary:disabled { opacity: 0.5 !important; cursor: not-allowed !important; filter: none !important; }
+.sf-btn-danger { background: var(--red) !important; color: #fff !important; border: none !important; }
+.sf-btn-danger:hover { filter: brightness(1.1) !important; }
+.sf-btn-danger:disabled { opacity: 0.5 !important; cursor: not-allowed !important; filter: none !important; }
+
+/* Botão "Novo" na toolbar */
+.sf-btn-new {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  font-size: 12.5px !important;
+  font-weight: 600 !important;
+  font-family: inherit !important;
+  padding: 7px 14px !important;
+  border-radius: 8px !important;
+  background: var(--blue) !important;
+  color: #fff !important;
+  border: none !important;
+  cursor: pointer !important;
+  transition: filter var(--t) !important;
+  text-decoration: none !important;
+}
+.sf-btn-new:hover { filter: brightness(1.1) !important; }
+
+/* Toast */
+.sf-toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 9999;
+  background: #1E2128;
+  border: 1px solid var(--border-strong);
+  border-radius: 10px;
+  padding: 12px 18px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--t1);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  animation: toastIn 200ms ease;
+  min-width: 240px;
+}
+@keyframes toastIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.sf-toast.success i { color: var(--green); }
+.sf-toast.error   i { color: var(--red); }
+
 /* Override bootstrap remnants */
 .body-wrapper, .app-header, .left-sidebar .brand-logo,
 .sidebar-nav, #sidebarnav, .navbar {
