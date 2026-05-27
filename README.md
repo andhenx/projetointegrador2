@@ -2,7 +2,13 @@
 
 Sistema de controle de estoque para uma ferragem de bairro. Desenvolvido para a disciplina de Projeto Integrador II — semestre 2026/1.
 
-**Grupo:** Anderson de Oliveira, Andrew Henrique de Lara Girarde e André Luiz dos Santos
+**Autores**
+
+| Nome | E-mail institucional |
+|------|----------------------|
+| Anderson de Oliveira | anderson.202414773@unilasalle.edu.br |
+| Andrew Henrique de Lara Girarde | andrew.202220811@unilasalle.edu.br |
+| André Luiz dos Santos | andre.santos0230@unilasalle.edu.br |
 
 ---
 
