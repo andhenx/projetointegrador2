@@ -1,6 +1,6 @@
-# SmartFerragem — Projeto Integrador II
+# Ferragem Tools — Projeto Integrador II
 
-Sistema de controle de estoque para uma ferragem de bairro. Desenvolvido para a disciplina de Projeto Integrador II — semestre 2026/1.
+Sistema de controle de estoque para a Ferragem Tools. Desenvolvido para a disciplina de Projeto Integrador II — semestre 2026/1.
 
 **Autores**
 
