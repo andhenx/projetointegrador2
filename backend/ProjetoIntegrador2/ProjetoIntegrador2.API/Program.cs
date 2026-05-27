@@ -3,19 +3,17 @@ using ProjetoIntegrador2.API.Data;
 using ProjetoIntegrador2.API.Data.Seeds;
 using ProjetoIntegrador2.API.Mappings;
 
-// Necessário para o Npgsql aceitar DateTime sem precisar ser UTC
+// o Npgsql rejeita DateTime sem fuso horário por padrão; este switch mantém o comportamento legado
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Configura a conexão com o banco PostgreSQL
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// AutoMapper para converter entre entidades e DTOs
 builder.Services.AddAutoMapper(typeof(ProdutoProfile));
 
-// Permite que o frontend acesse a API (CORS liberado para desenvolvimento)
+// em produção, substituir AllowAll por política com origem explícita
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
@@ -28,7 +26,6 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-// Cria as tabelas no banco se ainda não existirem e popula os dados iniciais
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
@@ -36,7 +33,6 @@ using (var scope = app.Services.CreateScope())
     MovimentoSeeder.Seed(db);
 }
 
-// Swagger só fica disponível em ambiente de desenvolvimento
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();

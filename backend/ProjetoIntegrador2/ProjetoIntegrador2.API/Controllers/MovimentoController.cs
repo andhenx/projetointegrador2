@@ -40,7 +40,7 @@ public class MovimentoController : ControllerBase
 
         var tipo = dto.Tipo.Trim();
 
-        // Não permite saída se não tiver estoque suficiente
+        // regra de negócio: saída não pode ultrapassar o saldo disponível
         if (tipo.Equals("Saida", StringComparison.OrdinalIgnoreCase) && produto.Estoque < dto.Qtde)
             return BadRequest("Estoque insuficiente para realizar a saída.");
 
@@ -59,7 +59,6 @@ public class MovimentoController : ControllerBase
             Total     = dto.Qtde * dto.PrecoUnit
         };
 
-        // Atualiza o estoque do produto conforme o tipo de movimento
         if (tipo.Equals("Entrada", StringComparison.OrdinalIgnoreCase))
             produto.Estoque += dto.Qtde;
         else

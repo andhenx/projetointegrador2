@@ -70,7 +70,6 @@
 <main class="sf-main">
   <div class="sf-content">
 
-    <!-- Page header -->
     <div class="sf-page-header">
       <div>
         <h1 class="sf-page-title">Dashboard</h1>
@@ -81,7 +80,6 @@
       </button>
     </div>
 
-    <!-- Skeleton loading -->
     <div id="sf-skeleton">
       <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px">
         <div style="background:var(--bg-1);border:1px solid var(--border);border-radius:12px;padding:20px">
@@ -112,16 +110,13 @@
       </div>
     </div>
 
-    <!-- Error -->
     <div class="sf-error" id="sf-error" style="display:none">
       <i class="ti ti-alert-circle"></i>
       <span id="sf-error-msg"></span>
     </div>
 
-    <!-- Content -->
     <div id="sf-content" style="display:none">
 
-      <!-- KPI Grid -->
       <div class="sf-kpi-grid">
         <div class="sf-kpi blue">
           <div class="sf-kpi-label"><i class="ti ti-box"></i> Total de Produtos</div>
@@ -145,7 +140,6 @@
         </div>
       </div>
 
-      <!-- Alertas -->
       <div class="sf-card">
         <div class="sf-section-header">
           <i class="ti ti-alert-triangle" style="color:var(--amber);font-size:17px"></i>
@@ -154,13 +148,11 @@
           <span class="sf-section-sub">Produtos com quantidade crítica (≤ 5 un.)</span>
         </div>
 
-        <!-- Empty state -->
         <div class="sf-empty-state" id="sf-alerts-empty" style="display:none">
           <i class="ti ti-circle-check"></i>
           <p>Todos os produtos estão com estoque adequado.</p>
         </div>
 
-        <!-- Table -->
         <div class="sf-table-wrap" id="sf-alerts-table">
           <table class="sf-table">
             <thead>
@@ -201,7 +193,6 @@ const API = 'http://localhost:8080/api/produto';
 const LIMIAR = 5;
 let allProdutos = [];
 
-// funções para formatar valores na tela
 const fmtBRL = v => 'R$ ' + Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const fmtQtd = v => {
   const n = Number(v);
@@ -210,11 +201,9 @@ const fmtQtd = v => {
     : n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 };
 
-// mostra a data atual no cabeçalho
 document.getElementById('sf-date').textContent =
   new Date().toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: 'short' });
 
-// busca os dados da API quando a página carrega
 async function carregar() {
   document.getElementById('sf-skeleton').style.display = 'block';
   document.getElementById('sf-error').style.display = 'none';
@@ -278,7 +267,7 @@ function renderDash(produtos) {
 document.getElementById('sf-refresh').addEventListener('click', carregar);
 carregar();
 
-// abre e fecha o menu lateral no celular
+// menu lateral no mobile
 const sidebar  = document.getElementById('sf-sidebar');
 const backdrop = document.getElementById('sf-backdrop');
 
@@ -295,7 +284,7 @@ document.getElementById('sf-menu-toggle').addEventListener('click', openSidebar)
 document.getElementById('sf-close').addEventListener('click', closeSidebar);
 backdrop.addEventListener('click', closeSidebar);
 
-// paleta de busca rápida (abre com Ctrl+K)
+// paleta de comandos — Ctrl+K
 const pages = [
   { name: 'Dashboard',     href: './index.html',        icon: 'ti-layout-dashboard' },
   { name: 'Estoque',       href: './produtos.html',      icon: 'ti-package' },

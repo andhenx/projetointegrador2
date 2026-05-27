@@ -106,14 +106,14 @@ public class AppDbContext : DbContext
                   .HasColumnType("numeric(18,4)");
         });
 
-        // Popula a tabela de produtos com os dados do CSV
+        // seed via CSV; o HasData do EF Core precisa dos dados em OnModelCreating
         var config = new CsvConfiguration(CultureInfo.GetCultureInfo("pt-BR"))
         {
             HasHeaderRecord = true,
             Delimiter = ","
         };
 
-        // Tenta o caminho padrão, se não achar tenta o diretório atual
+        // BaseDirectory aponta para bin/ em desenvolvimento e para a raiz no container
         string path = Path.Combine(AppContext.BaseDirectory, "Data", "Seeds", "produtos_com_uuid.csv");
         if (!File.Exists(path))
             path = Path.Combine(Directory.GetCurrentDirectory(), "Data", "Seeds", "produtos_com_uuid.csv");
